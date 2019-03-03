@@ -10,7 +10,7 @@ from .models import Profile
 def home(request,*args,**kwargs):
     if request.user.is_authenticated:
         user = request.user
-        return render(request,'acumenapp/home.html',{'user':user})
+        return render(request,'acumenapp/home.html',{'user' : user})
     else:
         return render(request, 'acumenapp/home.html',{})
 def events(request):
@@ -29,18 +29,30 @@ def register(request):
         profile =  Profile(user=user,phone_number =mobile_number)
         qrcode = 'VCEIT' + get_random_string(5).lower()
         sample = pyq.create(qrcode)
-        sample.png(qrcode + '.png', scale=10)
+        #sample.png(qrcode + '.png', scale=10)
         mail_subject = 'Activate your AcumenIT account.'
         message = 'Your Qr is:'
         email = EmailMessage(
             mail_subject, message, to=[emailid]
         )
-        email.attach_file('VCEIT0wvfm.png')
+        email.attach_file(sample.png(qrcode + '.png', scale=10))
         email.send()
         login(request, user)
         return redirect("/home?redirect=true&registered=true")
         pass
+def login(request):
+    if request.method == 'POST':
+        user = authenticate(username=request.POST.get('email'), password=request.POST.get('password'))
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                return redirect("/home?login=true")
+            else:
+                pass
+        else:
+            return redirect("/home?loginfailed=true")
+    pass
 
 def logout_view(request):
     logout(request)
-    return redirect('/')
+    return redirect('/?logout=true')
